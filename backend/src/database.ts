@@ -8,18 +8,20 @@ const requiredVariables = [
   "DB_HOST",
   "DB_USER",
   "DB_PASSWORD",
-  "DB_NAME"
+  "DB_NAME",
 ] as const;
 
 const missingVariables = requiredVariables.filter(
-  (name) => !process.env[name]
+  (name) => !process.env[name],
 );
 
 if (missingVariables.length > 0) {
   throw new Error(
-    `Missing database environment variables: ${missingVariables.join(", ")}`
+    `Missing database environment variables: ${missingVariables.join(", ")}`,
   );
 }
+
+const isProduction = process.env.NODE_ENV === "production";
 
 export const pool = mysql.createPool({
   host: process.env.DB_HOST!,
@@ -27,7 +29,12 @@ export const pool = mysql.createPool({
   user: process.env.DB_USER!,
   password: process.env.DB_PASSWORD!,
   database: process.env.DB_NAME!,
+  ...(isProduction && {
+    ssl: {
+      rejectUnauthorized: true,
+    },
+  }),
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 });
